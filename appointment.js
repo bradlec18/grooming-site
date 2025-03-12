@@ -2,6 +2,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const appointmentForm = document.getElementById("appointment-form");
     const appointmentDate = document.getElementById("appointment-date");
 
+    // Check if the user has already submitted the form
+    if (localStorage.getItem("appointmentSubmitted")) {
+        appointmentForm.innerHTML = "<p>You have already submitted an appointment request.</p>";
+        return;
+    }
+
     // Disable weekends (Saturday & Sunday) and Monday
     appointmentDate.addEventListener("input", function () {
         let selectedDate = new Date(appointmentDate.value);
@@ -61,7 +67,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update scheduled dogs count
         scheduledDogs[dogSize] += numDogs;
 
-        alert("Appointment booked successfully!");
-        appointmentForm.reset();
+        // Store submission status in localStorage
+        localStorage.setItem("appointmentSubmitted", "true");
+
+        // Show a message and disable the form
+        appointmentForm.innerHTML = "<p>Thank you! Your appointment has been submitted.</p>";
     });
 });
