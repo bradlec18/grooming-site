@@ -12,21 +12,14 @@
     </header>
     
     <main>
-        <!-- Reminder About Available Appointment Days -->
-        <p style="color: red; font-weight: bold; text-align: center;">
-            ⚠️ Appointments are only available Tuesday through Friday. 
-            Please do not schedule on weekends or Mondays.
-        </p>
-
+        <p class="warning"><strong>⚠️ Appointments are only available Tuesday through Friday. Please do not schedule on weekends or Mondays.</strong></p>
+        
         <form id="appointment-form">
-            <!-- Number of Dogs (First Field) -->
             <label for="num-dogs">Number of Dogs:</label>
             <input type="number" id="num-dogs" min="1" max="15" required>
 
-            <!-- Container for dynamically added dog details -->
-            <div id="dog-info-container"></div>
+            <div id="dog-info-container"></div> <!-- Dynamic fields will be inserted here -->
 
-            <!-- Customer Details -->
             <label for="customer-name">Your Name:</label>
             <input type="text" id="customer-name" required>
 
@@ -42,4 +35,4 @@
 
     <script src="appointment.js"></script>
 </body>
-</html>
+</html> 

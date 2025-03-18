@@ -2,18 +2,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const appointmentForm = document.getElementById("appointment-form");
     const appointmentDate = document.getElementById("appointment-date");
     const numDogsInput = document.getElementById("num-dogs");
-    const dogInfoContainer = document.getElementById("dog-info-container");
+    const dogInfoContainer = document.getElementById("dog-info-container"); // Make sure this exists
 
     // Function to dynamically update dog input fields
     function updateDogFields() {
-        // Clear previous dog inputs
-        dogInfoContainer.innerHTML = "";
+        dogInfoContainer.innerHTML = ""; // Clear previous entries
 
         let numDogs = parseInt(numDogsInput.value);
-
         if (numDogs > 0 && numDogs <= 15) {
             for (let i = 1; i <= numDogs; i++) {
-                // Create label & input for Dog Name
+                // Create Dog Name Input
                 let nameLabel = document.createElement("label");
                 nameLabel.textContent = `Dog ${i} Name:`;
                 let nameInput = document.createElement("input");
@@ -21,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 nameInput.name = `dog-name-${i}`;
                 nameInput.required = true;
 
-                // Create label & input for Dog Breed
+                // Create Dog Breed Input
                 let breedLabel = document.createElement("label");
                 breedLabel.textContent = `Dog ${i} Breed:`;
                 let breedInput = document.createElement("input");
@@ -29,22 +27,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 breedInput.name = `dog-breed-${i}`;
                 breedInput.required = true;
 
-                // Create label & select for Dog Size
+                // Create Dog Size Select
                 let sizeLabel = document.createElement("label");
                 sizeLabel.textContent = `Dog ${i} Size:`;
                 let sizeSelect = document.createElement("select");
                 sizeSelect.name = `dog-size-${i}`;
                 sizeSelect.required = true;
 
-                let sizeOptions = ["small", "medium", "large"];
-                sizeOptions.forEach(size => {
+                let sizes = ["small", "medium", "large"];
+                sizes.forEach(size => {
                     let option = document.createElement("option");
                     option.value = size;
                     option.textContent = size.charAt(0).toUpperCase() + size.slice(1);
                     sizeSelect.appendChild(option);
                 });
 
-                // Append all elements to the container
+                // Append all fields to container
                 dogInfoContainer.appendChild(nameLabel);
                 dogInfoContainer.appendChild(nameInput);
                 dogInfoContainer.appendChild(breedLabel);
@@ -55,10 +53,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Update dog fields when number of dogs changes
+    // Update fields when number of dogs changes
     numDogsInput.addEventListener("input", updateDogFields);
 
-    // Prevent appointments on weekends & Mondays
+    // Prevent booking on weekends & Mondays
     appointmentDate.addEventListener("input", function () {
         let selectedDate = new Date(appointmentDate.value);
         let dayOfWeek = selectedDate.getDay();
