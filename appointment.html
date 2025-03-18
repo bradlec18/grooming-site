@@ -10,37 +10,28 @@
     <header>
         <h1>Schedule an Appointment</h1>
     </header>
+    
     <main>
+        <!-- Reminder About Available Appointment Days -->
         <p style="color: red; font-weight: bold; text-align: center;">
             ⚠️ Appointments are only available Tuesday through Friday. 
             Please do not schedule on weekends or Mondays.
         </p>
+
         <form id="appointment-form">
+            <!-- Number of Dogs (First Field) -->
+            <label for="num-dogs">Number of Dogs:</label>
+            <input type="number" id="num-dogs" min="1" max="15" required>
+
+            <!-- Container for dynamically added dog details -->
+            <div id="dog-info-container"></div>
+
+            <!-- Customer Details -->
             <label for="customer-name">Your Name:</label>
             <input type="text" id="customer-name" required>
 
             <label for="phone-number">Phone Number:</label>
             <input type="tel" id="phone-number" required>
-
-            <label for="dog-name">Dog's Name:</label>
-            <input type="text" id="dog-name" required>
-
-            <label for="num-dogs">Number of Dogs:</label>
-<input type="number" id="num-dogs" min="1" max="15" required>
-
-<div id="breed-container">
-    <!-- Dog breed fields will be added here dynamically -->
-</div>
-
-            <label for="dog-size">Dog Size:</label>
-            <select id="dog-size" required>
-                <option value="small">Small (≤18 lbs)</option>
-                <option value="medium">Medium (≤55 lbs)</option>
-                <option value="large">Large (>55 lbs)</option>
-            </select>
-
-            <label for="num-dogs">Number of Dogs:</label>
-            <input type="number" id="num-dogs" min="1" max="15" required>
 
             <label for="appointment-date">Select Date:</label>
             <input type="date" id="appointment-date" required>
@@ -48,6 +39,7 @@
             <button type="submit">Book Appointment</button>
         </form>
     </main>
+
     <script src="appointment.js"></script>
 </body>
 </html>

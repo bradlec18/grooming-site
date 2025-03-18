@@ -1,76 +1,108 @@
 document.addEventListener("DOMContentLoaded", function () {
     const appointmentForm = document.getElementById("appointment-form");
     const appointmentDate = document.getElementById("appointment-date");
+    const numDogsInput = document.getElementById("num-dogs");
+    const dogInfoContainer = document.getElementById("dog-info-container");
 
-    // Check if the user has already submitted the form
-    if (localStorage.getItem("appointmentSubmitted")) {
-        appointmentForm.innerHTML = "<p>You have already submitted an appointment request.</p>";
-        return;
+    // Function to dynamically update dog input fields
+    function updateDogFields() {
+        // Clear previous dog inputs
+        dogInfoContainer.innerHTML = "";
+
+        let numDogs = parseInt(numDogsInput.value);
+
+        if (numDogs > 0 && numDogs <= 15) {
+            for (let i = 1; i <= numDogs; i++) {
+                // Create label & input for Dog Name
+                let nameLabel = document.createElement("label");
+                nameLabel.textContent = `Dog ${i} Name:`;
+                let nameInput = document.createElement("input");
+                nameInput.type = "text";
+                nameInput.name = `dog-name-${i}`;
+                nameInput.required = true;
+
+                // Create label & input for Dog Breed
+                let breedLabel = document.createElement("label");
+                breedLabel.textContent = `Dog ${i} Breed:`;
+                let breedInput = document.createElement("input");
+                breedInput.type = "text";
+                breedInput.name = `dog-breed-${i}`;
+                breedInput.required = true;
+
+                // Create label & select for Dog Size
+                let sizeLabel = document.createElement("label");
+                sizeLabel.textContent = `Dog ${i} Size:`;
+                let sizeSelect = document.createElement("select");
+                sizeSelect.name = `dog-size-${i}`;
+                sizeSelect.required = true;
+
+                let sizeOptions = ["small", "medium", "large"];
+                sizeOptions.forEach(size => {
+                    let option = document.createElement("option");
+                    option.value = size;
+                    option.textContent = size.charAt(0).toUpperCase() + size.slice(1);
+                    sizeSelect.appendChild(option);
+                });
+
+                // Append all elements to the container
+                dogInfoContainer.appendChild(nameLabel);
+                dogInfoContainer.appendChild(nameInput);
+                dogInfoContainer.appendChild(breedLabel);
+                dogInfoContainer.appendChild(breedInput);
+                dogInfoContainer.appendChild(sizeLabel);
+                dogInfoContainer.appendChild(sizeSelect);
+            }
+        }
     }
 
-    // Disable weekends (Saturday & Sunday) and Monday
+    // Update dog fields when number of dogs changes
+    numDogsInput.addEventListener("input", updateDogFields);
+
+    // Prevent appointments on weekends & Mondays
     appointmentDate.addEventListener("input", function () {
         let selectedDate = new Date(appointmentDate.value);
-        let dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
+        let dayOfWeek = selectedDate.getDay();
 
         if (dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 1) {
             alert("Appointments are only available from Tuesday to Friday.");
-            appointmentDate.value = ""; // Reset the date input
+            appointmentDate.value = "";
         }
     });
 
-    // Scheduling Logic
-    const maxDogsPerDay = 15;
-    let scheduledDogs = {
-        small: 0,
-        medium: 0,
-        large: 0
-    };
-
+    // Form submission logic
     appointmentForm.addEventListener("submit", function (event) {
         event.preventDefault();
 
-        let dogSize = document.getElementById("dog-size").value;
-        let numDogs = parseInt(document.getElementById("num-dogs").value);
+        let customerName = document.getElementById("customer-name").value;
+        let phoneNumber = document.getElementById("phone-number").value;
+        let selectedDate = appointmentDate.value;
+        let numDogs = parseInt(numDogsInput.value);
 
-        if (scheduledDogs.small + scheduledDogs.medium + scheduledDogs.large + numDogs > maxDogsPerDay) {
-            alert("Sorry, the maximum number of 15 dogs per day has been reached.");
+        // Collect dog information dynamically
+        let dogs = [];
+        for (let i = 1; i <= numDogs; i++) {
+            let dogName = document.getElementsByName(`dog-name-${i}`)[0].value;
+            let dogBreed = document.getElementsByName(`dog-breed-${i}`)[0].value;
+            let dogSize = document.getElementsByName(`dog-size-${i}`)[0].value;
+
+            if (!dogName || !dogBreed || !dogSize) {
+                alert("Please fill out all dog details.");
+                return;
+            }
+
+            dogs.push({ name: dogName, breed: dogBreed, size: dogSize });
+        }
+
+        // Ensure all required fields are filled
+        if (!customerName || !phoneNumber || !selectedDate || numDogs <= 0) {
+            alert("Please fill out all required fields.");
             return;
         }
 
-        if (dogSize === "small" && scheduledDogs.small + numDogs > 9) {
-            alert("Sorry, only 9 small dogs can be scheduled per day.");
-            return;
-        }
-
-        if (dogSize === "medium" && scheduledDogs.medium + numDogs > 3) {
-            alert("Sorry, only 3 medium dogs can be scheduled per day.");
-            return;
-        }
-
-        if (dogSize === "large" && scheduledDogs.large + numDogs > 3) {
-            alert("Sorry, only 3 large dogs can be scheduled per day.");
-            return;
-        }
-
-        // Additional logic for small & medium combos
-        if (scheduledDogs.medium >= 6 && scheduledDogs.small + numDogs > 6) {
-            alert("With 6 medium dogs scheduled, only 6 small dogs are allowed.");
-            return;
-        }
-
-        if (scheduledDogs.small >= 8 && scheduledDogs.medium + numDogs > 4) {
-            alert("With 8 small dogs scheduled, only 4 medium dogs are allowed.");
-            return;
-        }
-
-        // Update scheduled dogs count
-        scheduledDogs[dogSize] += numDogs;
-
-        // Store submission status in localStorage
+        // Store submission status in localStorage (temporary until backend setup)
         localStorage.setItem("appointmentSubmitted", "true");
 
-        // Show a message and disable the form
-        appointmentForm.innerHTML = "<p>Thank you! Your appointment has been submitted.</p>";
+        // Show confirmation message
+        appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
     });
-});
+}); 
