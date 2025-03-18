@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const appointmentForm = document.getElementById("appointment-form");
     const appointmentDate = document.getElementById("appointment-date");
     const numDogsInput = document.getElementById("num-dogs");
-    const dogInfoContainer = document.getElementById("dog-info-container"); // Make sure this exists
+    const dogInfoContainer = document.getElementById("dog-info-container"); // Ensure this exists in HTML
 
     // Function to dynamically update dog input fields
     function updateDogFields() {
@@ -14,25 +14,31 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Create Dog Name Input
                 let nameLabel = document.createElement("label");
                 nameLabel.textContent = `Dog ${i} Name:`;
+                nameLabel.classList.add("form-label");
                 let nameInput = document.createElement("input");
                 nameInput.type = "text";
                 nameInput.name = `dog-name-${i}`;
                 nameInput.required = true;
+                nameInput.classList.add("form-input");
 
                 // Create Dog Breed Input
                 let breedLabel = document.createElement("label");
                 breedLabel.textContent = `Dog ${i} Breed:`;
+                breedLabel.classList.add("form-label");
                 let breedInput = document.createElement("input");
                 breedInput.type = "text";
                 breedInput.name = `dog-breed-${i}`;
                 breedInput.required = true;
+                breedInput.classList.add("form-input");
 
                 // Create Dog Size Select
                 let sizeLabel = document.createElement("label");
                 sizeLabel.textContent = `Dog ${i} Size:`;
+                sizeLabel.classList.add("form-label");
                 let sizeSelect = document.createElement("select");
                 sizeSelect.name = `dog-size-${i}`;
                 sizeSelect.required = true;
+                sizeSelect.classList.add("form-select");
 
                 let sizes = ["small", "medium", "large"];
                 sizes.forEach(size => {
@@ -56,16 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update fields when number of dogs changes
     numDogsInput.addEventListener("input", updateDogFields);
 
-    // Prevent booking on weekends & Mondays
-    appointmentDate.addEventListener("input", function () {
-        let selectedDate = new Date(appointmentDate.value);
-        let dayOfWeek = selectedDate.getDay();
-
-        if (dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 1) {
-            alert("Appointments are only available from Tuesday to Friday.");
-            appointmentDate.value = "";
-        }
-    });
+    // 🚀 Removed pop-up alert for date selection, as per request
 
     // Form submission logic
     appointmentForm.addEventListener("submit", function (event) {
@@ -103,4 +100,4 @@ document.addEventListener("DOMContentLoaded", function () {
         // Show confirmation message
         appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
     });
-}); 
+});
