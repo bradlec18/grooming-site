@@ -1,76 +1,84 @@
 document.addEventListener("DOMContentLoaded", function () {
     const appointmentForm = document.getElementById("appointment-form");
     const appointmentDate = document.getElementById("appointment-date");
+    const numDogsInput = document.getElementById("num-dogs");
+    const dogSizeInput = document.getElementById("dog-size");
 
-    // Check if the user has already submitted the form
-    if (localStorage.getItem("appointmentSubmitted")) {
-        appointmentForm.innerHTML = "<p>You have already submitted an appointment request.</p>";
-        return;
-    }
+    let appointments = {}; // This will store the JSON data
+
+    // Fetch available slots from the JSON file
+    fetch("appointments.json")
+        .then(response => response.json())
+        .then(data => {
+            appointments = data.appointments;
+        })
+        .catch(error => console.error("Error loading appointment data:", error));
 
     // Disable weekends (Saturday & Sunday) and Monday
     appointmentDate.addEventListener("input", function () {
-        let selectedDate = new Date(appointmentDate.value);
-        let dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
+        let selectedDate = appointmentDate.value;
+        let selectedDay = new Date(selectedDate).getDay();
 
-        if (dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 1) {
+        if (selectedDay === 0 || selectedDay === 6 || selectedDay === 1) {
             alert("Appointments are only available from Tuesday to Friday.");
-            appointmentDate.value = ""; // Reset the date input
+            appointmentDate.value = "";
+            return;
+        }
+
+        // Check if the selected date is fully booked
+        let appointment = appointments.find(a => a.date === selectedDate);
+        if (appointment) {
+            let totalBooked = appointment.slots.small + appointment.slots.medium + appointment.slots.large;
+            if (totalBooked >= 15) {
+                alert("This date is fully booked. Please choose another day.");
+                appointmentDate.value = "";
+            }
         }
     });
 
-    // Scheduling Logic
-    const maxDogsPerDay = 15;
-    let scheduledDogs = {
-        small: 0,
-        medium: 0,
-        large: 0
-    };
-
+    // Prevent overbooking based on dog size
     appointmentForm.addEventListener("submit", function (event) {
         event.preventDefault();
 
-        let dogSize = document.getElementById("dog-size").value;
-        let numDogs = parseInt(document.getElementById("num-dogs").value);
+        let selectedDate = appointmentDate.value;
+        let numDogs = parseInt(numDogsInput.value);
+        let dogSize = dogSizeInput.value;
 
-        if (scheduledDogs.small + scheduledDogs.medium + scheduledDogs.large + numDogs > maxDogsPerDay) {
-            alert("Sorry, the maximum number of 15 dogs per day has been reached.");
+        let appointment = appointments.find(a => a.date === selectedDate);
+
+        if (!appointment) {
+            appointment = { date: selectedDate, slots: { small: 0, medium: 0, large: 0 } };
+            appointments.push(appointment);
+        }
+
+        let totalBooked = appointment.slots.small + appointment.slots.medium + appointment.slots.large;
+        if (totalBooked + numDogs > 15) {
+            alert("Maximum 15 dogs per day. Reduce the number of dogs.");
             return;
         }
 
-        if (dogSize === "small" && scheduledDogs.small + numDogs > 9) {
-            alert("Sorry, only 9 small dogs can be scheduled per day.");
+        if (dogSize === "small" && appointment.slots.small + numDogs > 9) {
+            alert("Only 9 small dogs can be booked per day.");
             return;
         }
 
-        if (dogSize === "medium" && scheduledDogs.medium + numDogs > 3) {
-            alert("Sorry, only 3 medium dogs can be scheduled per day.");
+        if (dogSize === "medium" && appointment.slots.medium + numDogs > 3) {
+            alert("Only 3 medium dogs can be booked per day.");
             return;
         }
 
-        if (dogSize === "large" && scheduledDogs.large + numDogs > 3) {
-            alert("Sorry, only 3 large dogs can be scheduled per day.");
+        if (dogSize === "large" && appointment.slots.large + numDogs > 3) {
+            alert("Only 3 large dogs can be booked per day.");
             return;
         }
 
-        // Additional logic for small & medium combos
-        if (scheduledDogs.medium >= 6 && scheduledDogs.small + numDogs > 6) {
-            alert("With 6 medium dogs scheduled, only 6 small dogs are allowed.");
-            return;
-        }
+        // Update the JSON data (simulated)
+        appointment.slots[dogSize] += numDogs;
 
-        if (scheduledDogs.small >= 8 && scheduledDogs.medium + numDogs > 4) {
-            alert("With 8 small dogs scheduled, only 4 medium dogs are allowed.");
-            return;
-        }
+        // Save to localStorage to simulate saving
+        localStorage.setItem("appointments", JSON.stringify(appointments));
 
-        // Update scheduled dogs count
-        scheduledDogs[dogSize] += numDogs;
-
-        // Store submission status in localStorage
-        localStorage.setItem("appointmentSubmitted", "true");
-
-        // Show a message and disable the form
-        appointmentForm.innerHTML = "<p>Thank you! Your appointment has been submitted.</p>";
+        alert("✅ Appointment booked successfully!");
+        appointmentForm.reset();
     });
-});
+}); 
