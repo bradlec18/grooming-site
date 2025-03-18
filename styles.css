@@ -1,3 +1,4 @@
+/* General Page Styling */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -6,17 +7,21 @@ body {
     background-color: #ffffff;
 }
 
+/* Header Styling */
 header {
     background: #1cb636;
     color: white;
     padding: 15px;
     font-size: 24px;
+    font-weight: bold;
 }
 
+/* Main Content */
 main {
     margin: 20px;
 }
 
+/* Button Styling */
 .btn {
     display: inline-block;
     padding: 10px 20px;
@@ -27,6 +32,11 @@ main {
     border-radius: 5px;
 }
 
+.btn:hover {
+    background: #45a049;
+}
+
+/* Form Styling */
 form {
     display: flex;
     flex-direction: column;
@@ -38,17 +48,18 @@ form {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Center align all form labels */
+/* Label Styling - Centering field names */
 form label {
     display: block;
     text-align: center;
     font-weight: bold;
     margin-top: 10px;
+    font-size: 16px;
 }
 
-/* Style inputs, selects, and buttons */
-input, select, button {
-    margin-top: 10px;
+/* Input and Select Field Styling */
+input, select {
+    margin-top: 5px;
     padding: 10px;
     font-size: 16px;
     border-radius: 5px;
@@ -57,7 +68,30 @@ input, select, button {
     text-align: center;
 }
 
-/* Button styling */
+/* Dog Entry Section */
+.dog-entry {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+/* Dog Entry Labels */
+.dog-entry label {
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* Dog Entry Input Fields */
+.dog-entry input, .dog-entry select {
+    width: 100%;
+}
+
+/* Submit Button */
 button {
     background: #4CAF50;
     color: white;
@@ -66,20 +100,21 @@ button {
     font-size: 18px;
     padding: 12px;
     margin-top: 15px;
+    border-radius: 5px;
 }
 
 button:hover {
     background: #45a049;
 }
 
-/* Warning message styling */
+/* Warning Message Styling */
 .warning {
     color: red;
     font-weight: bold;
     margin-bottom: 20px;
 }
 
-/* Center the dynamic dog details section */
+/* Ensure dog details section is centered */
 #dog-details {
     text-align: center;
-} 
+}
