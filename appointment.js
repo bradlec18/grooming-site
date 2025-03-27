@@ -109,4 +109,4 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("There was a problem submitting your appointment. Please try again.");
         });
     });
-});
+}); 
