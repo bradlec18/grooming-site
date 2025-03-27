@@ -55,38 +55,44 @@ document.addEventListener("DOMContentLoaded", function () {
         const date = appointmentDate.value;
         const numDogs = parseInt(numDogsInput.value);
 
-        const dogs = [];
         for (let i = 1; i <= numDogs; i++) {
-            const dogName = document.getElementsByName(`dog-name-${i}`)[0].value;
-            const dogBreed = document.getElementsByName(`dog-breed-${i}`)[0].value;
-            const dogSize = document.getElementsByName(`dog-size-${i}`)[0].value;
+            const dog_name = document.getElementsByName(`dog-name-${i}`)[0].value;
+            const dog_breed = document.getElementsByName(`dog-breed-${i}`)[0].value;
+            const dog_size = document.getElementsByName(`dog-size-${i}`)[0].value;
 
-            if (!dogName || !dogBreed || !dogSize) {
+            if (!dog_name || !dog_breed || !dog_size) {
                 alert("Please complete all dog fields.");
                 return;
             }
 
-            dogs.push({ name: dogName, breed: dogBreed, size: dogSize });
-        }
+            const data = {
+                data: {
+                    name: name,
+                    phone: phone,
+                    date: date,
+                    dog_name: dog_name,
+                    dog_breed: dog_breed,
+                    dog_size: dog_size
+                }
+            };
 
-        fetch("https://script.google.com/macros/s/AKfycbxjE3Mu2fMbD1ixkeg5gy1RfvL0WX6PATyxYkz0zeXEeP5Ph3zbvfz0XjteBqI_mCRS/exec", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                name, phone, date, dogs
+            fetch("https://sheetdb.io/api/v1/8umqwpfdx1nak", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
             })
-        })
             .then(response => response.json())
             .then(result => {
-                if (result.status === "success") {
-                    appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
-                } else {
-                    alert("❌ " + result.message);
-                }
+                console.log("Success:", result);
             })
-            .catch(err => {
-                console.error(err);
+            .catch(error => {
+                console.error("Error:", error);
                 alert("There was a problem submitting your appointment. Please try again.");
             });
+        }
+
+        appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
     });
-}); 
+});
