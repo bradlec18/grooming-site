@@ -67,46 +67,37 @@ document.addEventListener("DOMContentLoaded", function () {
     // Form submission logic
     appointmentForm.addEventListener("submit", function (event) {
         event.preventDefault();
-    
+
         let customerName = document.getElementById("customer-name").value;
         let phoneNumber = document.getElementById("phone-number").value;
         let selectedDate = appointmentDate.value;
         let numDogs = parseInt(numDogsInput.value);
-    
-        let dogNames = [];
-        let dogBreeds = [];
-        let dogSizes = [];
-    
+
+        // Collect dog information dynamically
+        let dogs = [];
         for (let i = 1; i <= numDogs; i++) {
-            dogNames.push(document.getElementsByName(`dog-name-${i}`)[0].value);
-            dogBreeds.push(document.getElementsByName(`dog-breed-${i}`)[0].value);
-            dogSizes.push(document.getElementsByName(`dog-size-${i}`)[0].value);
-        }
-    
-        // Send data to Google Apps Script
-        fetch("https://script.google.com/macros/s/AKfycbygvWZCt4UBw4LnJu3ItqlKgXhjs7CJ1knQ7XtAIuSzIJUpX-28zUbrldttY9AP4GD8rw/exec", {
-            method: "POST",
-            body: JSON.stringify({
-                name: customerName,
-                phone: phoneNumber,
-                date: selectedDate,
-                numDogs: numDogs,
-                dogNames: dogNames,
-                dogBreeds: dogBreeds,
-                dogSizes: dogSizes
-            }),
-            headers: {
-                "Content-Type": "application/json"
+            let dogName = document.getElementsByName(`dog-name-${i}`)[0].value;
+            let dogBreed = document.getElementsByName(`dog-breed-${i}`)[0].value;
+            let dogSize = document.getElementsByName(`dog-size-${i}`)[0].value;
+
+            if (!dogName || !dogBreed || !dogSize) {
+                alert("Please fill out all dog details.");
+                return;
             }
-        })
-        .then(response => response.json())
-        .then(result => {
-            console.log("Success:", result);
-            appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("There was a problem submitting your appointment. Please try again.");
-        });
+
+            dogs.push({ name: dogName, breed: dogBreed, size: dogSize });
+        }
+
+        // Ensure all required fields are filled
+        if (!customerName || !phoneNumber || !selectedDate || numDogs <= 0) {
+            alert("Please fill out all required fields.");
+            return;
+        }
+
+        // Store submission status in localStorage (temporary until backend setup)
+        localStorage.setItem("appointmentSubmitted", "true");
+
+        // Show confirmation message
+        appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
     });
 }); 
