@@ -64,43 +64,30 @@ document.addEventListener("DOMContentLoaded", function () {
         let selectedDate = appointmentDate.value;
         let numDogs = parseInt(numDogsInput.value);
 
-        let dogNames = [];
-        let dogBreeds = [];
-        let dogSizes = [];
+        let formData = new FormData();
+        formData.append("name", customerName);
+        formData.append("phone", phoneNumber);
+        formData.append("date", selectedDate);
+        formData.append("numDogs", numDogs);
 
         for (let i = 1; i <= numDogs; i++) {
-            dogNames.push(document.getElementsByName(`dog-name-${i}`)[0].value);
-            dogBreeds.push(document.getElementsByName(`dog-breed-${i}`)[0].value);
-            dogSizes.push(document.getElementsByName(`dog-size-${i}`)[0].value);
-        }
+            let dogName = document.getElementsByName(`dog-name-${i}`)[0].value;
+            let dogBreed = document.getElementsByName(`dog-breed-${i}`)[0].value;
+            let dogSize = document.getElementsByName(`dog-size-${i}`)[0].value;
 
-        if (!customerName || !phoneNumber || !selectedDate || numDogs <= 0) {
-            alert("Please fill out all required fields.");
-            return;
+            formData.append(`dogName${i}`, dogName);
+            formData.append(`dogBreed${i}`, dogBreed);
+            formData.append(`dogSize${i}`, dogSize);
         }
 
         fetch("https://script.google.com/macros/s/AKfycbwD0D57Iqzvb5vCz6BJ4jzHeRKqAkcEt64LtgU_-NjXLDyRGM6aQAtYqbHLivnqnu5Ztw/exec", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: customerName,
-                phone: phoneNumber,
-                date: selectedDate,
-                numDogs: numDogs,
-                dogNames: dogNames,
-                dogBreeds: dogBreeds,
-                dogSizes: dogSizes
-            })
+            body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.result === "success") {
-                appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
-            } else {
-                throw new Error("Submission failed.");
-            }
+        .then(response => response.text())
+        .then(result => {
+            console.log("Success:", result);
+            appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
         })
         .catch(error => {
             console.error("Error:", error);
