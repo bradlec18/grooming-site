@@ -6,38 +6,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateDogFields() {
         dogInfoContainer.innerHTML = "";
-
-        let numDogs = parseInt(numDogsInput.value);
+        const numDogs = parseInt(numDogsInput.value);
         if (numDogs > 0 && numDogs <= 15) {
             for (let i = 1; i <= numDogs; i++) {
                 let nameLabel = document.createElement("label");
                 nameLabel.textContent = `Dog ${i} Name:`;
-                nameLabel.classList.add("form-label");
                 let nameInput = document.createElement("input");
                 nameInput.type = "text";
                 nameInput.name = `dog-name-${i}`;
                 nameInput.required = true;
-                nameInput.classList.add("form-input");
 
                 let breedLabel = document.createElement("label");
                 breedLabel.textContent = `Dog ${i} Breed:`;
-                breedLabel.classList.add("form-label");
                 let breedInput = document.createElement("input");
                 breedInput.type = "text";
                 breedInput.name = `dog-breed-${i}`;
                 breedInput.required = true;
-                breedInput.classList.add("form-input");
 
                 let sizeLabel = document.createElement("label");
                 sizeLabel.textContent = `Dog ${i} Size:`;
-                sizeLabel.classList.add("form-label");
                 let sizeSelect = document.createElement("select");
                 sizeSelect.name = `dog-size-${i}`;
                 sizeSelect.required = true;
-                sizeSelect.classList.add("form-select");
-
-                let sizes = ["small", "medium", "large"];
-                sizes.forEach(size => {
+                ["small", "medium", "large"].forEach(size => {
                     let option = document.createElement("option");
                     option.value = size;
                     option.textContent = size.charAt(0).toUpperCase() + size.slice(1);
@@ -59,39 +50,43 @@ document.addEventListener("DOMContentLoaded", function () {
     appointmentForm.addEventListener("submit", function (event) {
         event.preventDefault();
 
-        let customerName = document.getElementById("customer-name").value;
-        let phoneNumber = document.getElementById("phone-number").value;
-        let selectedDate = appointmentDate.value;
-        let numDogs = parseInt(numDogsInput.value);
+        const name = document.getElementById("customer-name").value;
+        const phone = document.getElementById("phone-number").value;
+        const date = appointmentDate.value;
+        const numDogs = parseInt(numDogsInput.value);
 
-        let formData = new FormData();
-        formData.append("name", customerName);
-        formData.append("phone", phoneNumber);
-        formData.append("date", selectedDate);
-        formData.append("numDogs", numDogs);
-
+        const dogs = [];
         for (let i = 1; i <= numDogs; i++) {
-            let dogName = document.getElementsByName(`dog-name-${i}`)[0].value;
-            let dogBreed = document.getElementsByName(`dog-breed-${i}`)[0].value;
-            let dogSize = document.getElementsByName(`dog-size-${i}`)[0].value;
+            const dogName = document.getElementsByName(`dog-name-${i}`)[0].value;
+            const dogBreed = document.getElementsByName(`dog-breed-${i}`)[0].value;
+            const dogSize = document.getElementsByName(`dog-size-${i}`)[0].value;
 
-            formData.append(`dogName${i}`, dogName);
-            formData.append(`dogBreed${i}`, dogBreed);
-            formData.append(`dogSize${i}`, dogSize);
+            if (!dogName || !dogBreed || !dogSize) {
+                alert("Please complete all dog fields.");
+                return;
+            }
+
+            dogs.push({ name: dogName, breed: dogBreed, size: dogSize });
         }
 
-        fetch("https://script.google.com/macros/s/AKfycbwD0D57Iqzvb5vCz6BJ4jzHeRKqAkcEt64LtgU_-NjXLDyRGM6aQAtYqbHLivnqnu5Ztw/exec", {
+        fetch("https://script.google.com/macros/s/AKfycbxjE3Mu2fMbD1ixkeg5gy1RfvL0WX6PATyxYkz0zeXEeP5Ph3zbvfz0XjteBqI_mCRS/exec", {
             method: "POST",
-            body: formData
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name, phone, date, dogs
+            })
         })
-        .then(response => response.text())
-        .then(result => {
-            console.log("Success:", result);
-            appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("There was a problem submitting your appointment. Please try again.");
-        });
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === "success") {
+                    appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
+                } else {
+                    alert("❌ " + result.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("There was a problem submitting your appointment. Please try again.");
+            });
     });
-});
+}); 
