@@ -2,53 +2,55 @@ document.addEventListener("DOMContentLoaded", function () {
     const appointmentForm = document.getElementById("appointment-form");
     const appointmentDate = document.getElementById("appointment-date");
     const numDogsInput = document.getElementById("num-dogs");
-    const dogInfoContainer = document.getElementById("dog-info-container"); // Ensure this exists in HTML
+    const dogInfoContainer = document.getElementById("dog-info-container");
 
     // Function to dynamically update dog input fields
     function updateDogFields() {
-        dogInfoContainer.innerHTML = ""; // Clear previous entries
+        dogInfoContainer.innerHTML = ""; // Clear previous fields
 
         let numDogs = parseInt(numDogsInput.value);
         if (numDogs > 0 && numDogs <= 15) {
             for (let i = 1; i <= numDogs; i++) {
-                // Create Dog Name Input
-                let nameLabel = document.createElement("label");
+                // Dog Name
+                const nameLabel = document.createElement("label");
                 nameLabel.textContent = `Dog ${i} Name:`;
                 nameLabel.classList.add("form-label");
-                let nameInput = document.createElement("input");
+
+                const nameInput = document.createElement("input");
                 nameInput.type = "text";
                 nameInput.name = `dog-name-${i}`;
                 nameInput.required = true;
                 nameInput.classList.add("form-input");
 
-                // Create Dog Breed Input
-                let breedLabel = document.createElement("label");
+                // Dog Breed
+                const breedLabel = document.createElement("label");
                 breedLabel.textContent = `Dog ${i} Breed:`;
                 breedLabel.classList.add("form-label");
-                let breedInput = document.createElement("input");
+
+                const breedInput = document.createElement("input");
                 breedInput.type = "text";
                 breedInput.name = `dog-breed-${i}`;
                 breedInput.required = true;
                 breedInput.classList.add("form-input");
 
-                // Create Dog Size Select
-                let sizeLabel = document.createElement("label");
+                // Dog Size
+                const sizeLabel = document.createElement("label");
                 sizeLabel.textContent = `Dog ${i} Size:`;
                 sizeLabel.classList.add("form-label");
-                let sizeSelect = document.createElement("select");
+
+                const sizeSelect = document.createElement("select");
                 sizeSelect.name = `dog-size-${i}`;
                 sizeSelect.required = true;
                 sizeSelect.classList.add("form-select");
 
-                let sizes = ["small", "medium", "large"];
-                sizes.forEach(size => {
-                    let option = document.createElement("option");
+                ["small", "medium", "large"].forEach(size => {
+                    const option = document.createElement("option");
                     option.value = size;
                     option.textContent = size.charAt(0).toUpperCase() + size.slice(1);
                     sizeSelect.appendChild(option);
                 });
 
-                // Append all fields to container
+                // Append to form
                 dogInfoContainer.appendChild(nameLabel);
                 dogInfoContainer.appendChild(nameInput);
                 dogInfoContainer.appendChild(breedLabel);
@@ -59,45 +61,65 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Update fields when number of dogs changes
+    // Update dog fields when number changes
     numDogsInput.addEventListener("input", updateDogFields);
-
-    // 🚀 Removed pop-up alert for date selection, as per request
 
     // Form submission logic
     appointmentForm.addEventListener("submit", function (event) {
         event.preventDefault();
 
-        let customerName = document.getElementById("customer-name").value;
-        let phoneNumber = document.getElementById("phone-number").value;
-        let selectedDate = appointmentDate.value;
-        let numDogs = parseInt(numDogsInput.value);
+        const customerName = document.getElementById("customer-name").value.trim();
+        const phoneNumber = document.getElementById("phone-number").value.trim();
+        const selectedDate = appointmentDate.value;
+        const numDogs = parseInt(numDogsInput.value);
 
-        // Collect dog information dynamically
-        let dogs = [];
-        for (let i = 1; i <= numDogs; i++) {
-            let dogName = document.getElementsByName(`dog-name-${i}`)[0].value;
-            let dogBreed = document.getElementsByName(`dog-breed-${i}`)[0].value;
-            let dogSize = document.getElementsByName(`dog-size-${i}`)[0].value;
-
-            if (!dogName || !dogBreed || !dogSize) {
-                alert("Please fill out all dog details.");
-                return;
-            }
-
-            dogs.push({ name: dogName, breed: dogBreed, size: dogSize });
-        }
-
-        // Ensure all required fields are filled
         if (!customerName || !phoneNumber || !selectedDate || numDogs <= 0) {
             alert("Please fill out all required fields.");
             return;
         }
 
-        // Store submission status in localStorage (temporary until backend setup)
-        localStorage.setItem("appointmentSubmitted", "true");
+        let dogNames = [], dogBreeds = [], dogSizes = [];
 
-        // Show confirmation message
-        appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
+        for (let i = 1; i <= numDogs; i++) {
+            const name = document.getElementsByName(`dog-name-${i}`)[0].value.trim();
+            const breed = document.getElementsByName(`dog-breed-${i}`)[0].value.trim();
+            const size = document.getElementsByName(`dog-size-${i}`)[0].value;
+
+            if (!name || !breed || !size) {
+                alert(`Please fill out all details for Dog ${i}.`);
+                return;
+            }
+
+            dogNames.push(name);
+            dogBreeds.push(breed);
+            dogSizes.push(size);
+        }
+
+        // Send data to Google Apps Script
+        fetch("https://script.google.com/macros/s/AKfycbwD0D57Iqzvb5vCz6BJ4jzHeRKqAkcEt64LtgU_-NjXLDyRGM6aQAtYqbHLivnqnu5Ztw/exec", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: customerName,
+                phone: phoneNumber,
+                date: selectedDate,
+                numDogs: numDogs,
+                dogNames: dogNames,
+                dogBreeds: dogBreeds,
+                dogSizes: dogSizes
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.result === "success") {
+                appointmentForm.innerHTML = `<p>✅ Thank you, ${customerName}! Your appointment for ${numDogs} dog(s) on ${selectedDate} has been submitted.</p>`;
+            } else {
+                alert("Something went wrong. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("There was a problem submitting your appointment.");
+        });
     });
-}); 
+});
