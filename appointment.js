@@ -4,12 +4,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     const numDogsInput = document.getElementById("num-dogs");
     const dogInfoContainer = document.getElementById("dog-info-container");
 
-    // ✅ Create space for availability message
-    const availabilityNotice = document.createElement("div");
-    availabilityNotice.id = "availability-notice";
-    availabilityNotice.style.fontWeight = "bold";
-    availabilityNotice.style.marginBottom = "15px";
-    appointmentDateInput.insertAdjacentElement("afterend", availabilityNotice);
+    const availabilityDisplay = document.createElement("div");
+    availabilityDisplay.id = "availability-display";
+    appointmentDateInput.parentNode.insertBefore(availabilityDisplay, appointmentDateInput.nextSibling);
 
     const SHEETDB_API = "https://sheetdb.io/api/v1/8umqwpfdx1nak";
     let bookingsByDate = {};
@@ -18,17 +15,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
             const res = await fetch(SHEETDB_API);
             const data = await res.json();
-
             bookingsByDate = {};
 
             data.forEach(entry => {
                 const date = entry.date;
                 const size = entry.dog_size;
-
                 if (!bookingsByDate[date]) {
                     bookingsByDate[date] = { small: 0, medium: 0, large: 0 };
                 }
-
                 if (["small", "medium", "large"].includes(size)) {
                     bookingsByDate[date][size]++;
                 }
@@ -38,10 +32,42 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
+    function getMaxAllowedMedium(small) {
+        if (small >= 9) return 3;
+        if (small >= 8) return 4;
+        if (small >= 7) return 5;
+        if (small >= 6) return 6;
+        return 6;
+    }
+
+    function getMaxAllowedSmall(medium) {
+        if (medium >= 6) return 6;
+        if (medium === 5) return 7;
+        if (medium === 4) return 8;
+        return 9;
+    }
+
+    function updateAvailabilityDisplay(dateStr) {
+        const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
+
+        const maxSmall = getMaxAllowedSmall(bookings.medium);
+        const maxMedium = getMaxAllowedMedium(bookings.small);
+
+        const smallLeft = Math.max(0, maxSmall - bookings.small);
+        const mediumLeft = Math.max(0, maxMedium - bookings.medium);
+        const largeLeft = Math.max(0, 3 - bookings.large);
+
+        availabilityDisplay.innerHTML = `
+          <p>🐾 <strong>Availability for ${dateStr}</strong></p>
+          <p>Small dogs: ${smallLeft} slot(s) left</p>
+          <p>Medium dogs: ${mediumLeft} slot(s) left</p>
+          <p>Large dogs: ${largeLeft} slot(s) left</p>
+        `;
+    }
+
     function isDateFullyBooked(dateStr) {
         const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
         const total = bookings.small + bookings.medium + bookings.large;
-
         const small = bookings.small;
         const medium = bookings.medium;
         const large = bookings.large;
@@ -65,31 +91,21 @@ document.addEventListener("DOMContentLoaded", async function () {
             dateFormat: "Y-m-d",
             minDate: "today",
             disable: [
-                function (date) {
+                date => {
                     const day = date.getDay();
                     return day === 0 || day === 1 || day === 6;
                 },
-                function (date) {
+                date => {
                     const dateStr = date.toISOString().split("T")[0];
                     return isDateFullyBooked(dateStr);
                 }
             ],
-            onChange: function (selectedDates, dateStr) {
-                if (!dateStr) {
-                    availabilityNotice.textContent = "";
-                    return;
+            onChange: (selectedDates, dateStr) => {
+                if (dateStr) {
+                    updateAvailabilityDisplay(dateStr);
+                } else {
+                    availabilityDisplay.innerHTML = "";
                 }
-
-                const current = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
-
-                const remaining = {
-                    small: Math.max(0, 9 - current.small),
-                    medium: Math.max(0, 6 - current.medium),
-                    large: Math.max(0, 3 - current.large)
-                };
-
-                availabilityNotice.textContent = `🐾 Availability for ${dateStr}:
-Small: ${remaining.small}/9 left | Medium: ${remaining.medium}/6 left | Large: ${remaining.large}/3 left`;
             }
         });
     }
@@ -205,6 +221,7 @@ Small: ${remaining.small}/9 left | Medium: ${remaining.medium}/6 left | Large: $
 
             appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
             await loadBookings();
+            updateAvailabilityDisplay(date);
         } catch (err) {
             console.error("Submission error:", err);
             alert("There was a problem submitting your appointment.");
@@ -213,4 +230,4 @@ Small: ${remaining.small}/9 left | Medium: ${remaining.medium}/6 left | Large: $
 
     await loadBookings();
     initFlatpickr();
-}); 
+});
