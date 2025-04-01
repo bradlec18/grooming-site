@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ✅ Updated logic for disabling fully booked days
+    // Improved: Check if a date is fully booked
     function isDateFullyBooked(dateStr) {
         const b = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
         const total = b.small + b.medium + b.large;
@@ -40,16 +40,18 @@ document.addEventListener("DOMContentLoaded", async function () {
         const maxedSmall = b.small >= 9;
         const maxedMedium = b.medium >= 6;
         const maxedLarge = b.large >= 3;
-        const comboLimit =
+
+        const comboLimitReached = (
             (b.medium >= 6 && b.small >= 6) ||
             (b.medium === 5 && b.small >= 7) ||
             (b.medium === 4 && b.small >= 8) ||
-            (b.medium <= 3 && b.small >= 9);
+            (b.medium <= 3 && b.small >= 9)
+        );
 
-        return total >= 15 || (maxedSmall && maxedMedium && maxedLarge) || comboLimit;
+        return total >= 15 || (maxedSmall && maxedMedium && maxedLarge) || comboLimitReached;
     }
 
-    // Initialize Flatpickr
+    // Initialize Flatpickr calendar
     function initFlatpickr() {
         flatpickr(appointmentDateInput, {
             dateFormat: "Y-m-d",
@@ -57,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             disable: [
                 function (date) {
                     const day = date.getDay();
-                    return day === 0 || day === 1 || day === 6; // Disable Sunday, Monday, Saturday
+                    return day === 0 || day === 1 || day === 6; // Disable Sunday (0), Monday (1), Saturday (6)
                 },
                 function (date) {
                     const dateStr = date.toISOString().split("T")[0];
@@ -67,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
     }
 
-    // Generate dog inputs
+    // Create dog input fields dynamically
     function updateDogFields() {
         dogInfoContainer.innerHTML = "";
         const numDogs = parseInt(numDogsInput.value);
@@ -118,8 +120,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const name = document.getElementById("customer-name").value;
         const phone = document.getElementById("phone-number").value;
         const dateRaw = appointmentDateInput.value;
-        const dateObj = new Date(dateRaw);
-        const date = dateObj.toISOString().split("T")[0];
+        const date = new Date(dateRaw).toISOString().split("T")[0];
         const numDogs = parseInt(numDogsInput.value);
 
         if (!name || !phone || !date || isNaN(numDogs) || numDogs <= 0) {
@@ -144,6 +145,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             dogDataList.push({ dog_name, dog_breed, dog_size });
         }
 
+        // Check daily scheduling rules
         const current = bookingsByDate[date] || { small: 0, medium: 0, large: 0 };
         const total = current.small + current.medium + current.large + numDogs;
         const newSmall = current.small + newDogs.small;
@@ -159,9 +161,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (newMedium === 4 && newSmall > 8) return alert("With 4 medium dogs, only 8 small allowed.");
         if (newMedium <= 3 && newSmall > 9) return alert("Only 9 small dogs allowed if 3 or fewer medium dogs.");
 
-        // Submit dogs in parallel
+        // Submit data
         try {
-            await Promise.all(dogDataList.map(dog => {
+            const requests = dogDataList.map(dog => {
                 const data = {
                     data: {
                         name, phone, date,
@@ -170,21 +172,24 @@ document.addEventListener("DOMContentLoaded", async function () {
                         dog_size: dog.dog_size
                     }
                 };
+
                 return fetch(SHEETDB_API, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data)
                 });
-            }));
+            });
+
+            await Promise.all(requests);
 
             appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
-            await loadBookings(); // Refresh bookings
+            await loadBookings(); // Reload bookings after submission
         } catch (err) {
             console.error("Submission error:", err);
             alert("There was a problem submitting your appointment.");
         }
     });
 
-    await loadBookings(); // Load data
-    initFlatpickr();      // Setup calendar
+    await loadBookings();
+    initFlatpickr();
 }); 
