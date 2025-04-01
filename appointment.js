@@ -116,7 +116,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         const name = document.getElementById("customer-name").value;
         const phone = document.getElementById("phone-number").value;
-        const date = appointmentDateInput.value;
+
+        // Format the date to a readable string like "MM/DD/YYYY"
+        const rawDate = appointmentDateInput.value;
+        const dateObj = new Date(rawDate);
+        const date = dateObj.toLocaleDateString("en-US");
+
         const numDogs = parseInt(numDogsInput.value);
 
         if (!name || !phone || !date || isNaN(numDogs) || numDogs <= 0) {
@@ -141,8 +146,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             dogDataList.push({ dog_name, dog_breed, dog_size });
         }
 
-        // Check rules
-        const current = bookingsByDate[date] || { small: 0, medium: 0, large: 0 };
+        const current = bookingsByDate[rawDate] || { small: 0, medium: 0, large: 0 };
         const total = current.small + current.medium + current.large + numDogs;
         const newSmall = current.small + newDogs.small;
         const newMedium = current.medium + newDogs.medium;
@@ -157,7 +161,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (newMedium === 4 && newSmall > 8) return alert("With 4 medium dogs, only 8 small allowed.");
         if (newMedium <= 3 && newSmall > 9) return alert("Only 9 small dogs allowed if 3 or fewer medium dogs.");
 
-        // Submit each dog as a separate row
         try {
             for (const dog of dogDataList) {
                 const data = {
@@ -184,6 +187,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
-    await loadBookings(); // Load bookings and init calendar
-    initFlatpickr(); // Setup calendar
-});
+    await loadBookings();
+    initFlatpickr();
+}); 
