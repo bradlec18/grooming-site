@@ -7,18 +7,22 @@ document.addEventListener("DOMContentLoaded", async function () {
     const SHEETDB_API = "https://sheetdb.io/api/v1/8umqwpfdx1nak";
     let bookingsByDate = {};
 
+    // Load bookings from SheetDB
     async function loadBookings() {
         try {
             const res = await fetch(SHEETDB_API);
             const data = await res.json();
 
             bookingsByDate = {};
+
             data.forEach(entry => {
                 const date = entry.date;
                 const size = entry.dog_size;
+
                 if (!bookingsByDate[date]) {
                     bookingsByDate[date] = { small: 0, medium: 0, large: 0 };
                 }
+
                 if (["small", "medium", "large"].includes(size)) {
                     bookingsByDate[date][size]++;
                 }
@@ -28,56 +32,68 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
+    // ✅ Updated logic for disabling fully booked days
     function isDateFullyBooked(dateStr) {
-        const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
-        const total = bookings.small + bookings.medium + bookings.large;
-        return (
-            total >= 15 ||
-            bookings.large >= 3 ||
-            (bookings.medium >= 6 && bookings.small >= 6) ||
-            (bookings.medium === 5 && bookings.small >= 7) ||
-            (bookings.medium === 4 && bookings.small >= 8) ||
-            (bookings.medium <= 3 && bookings.small >= 9)
-        );
+        const b = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
+        const total = b.small + b.medium + b.large;
+
+        const maxedSmall = b.small >= 9;
+        const maxedMedium = b.medium >= 6;
+        const maxedLarge = b.large >= 3;
+        const comboLimit =
+            (b.medium >= 6 && b.small >= 6) ||
+            (b.medium === 5 && b.small >= 7) ||
+            (b.medium === 4 && b.small >= 8) ||
+            (b.medium <= 3 && b.small >= 9);
+
+        return total >= 15 || (maxedSmall && maxedMedium && maxedLarge) || comboLimit;
     }
 
+    // Initialize Flatpickr
     function initFlatpickr() {
         flatpickr(appointmentDateInput, {
             dateFormat: "Y-m-d",
             minDate: "today",
             disable: [
-                date => [0, 1, 6].includes(date.getDay()), // Sun, Mon, Sat
-                date => isDateFullyBooked(date.toISOString().split("T")[0])
+                function (date) {
+                    const day = date.getDay();
+                    return day === 0 || day === 1 || day === 6; // Disable Sunday, Monday, Saturday
+                },
+                function (date) {
+                    const dateStr = date.toISOString().split("T")[0];
+                    return isDateFullyBooked(dateStr);
+                }
             ]
         });
     }
 
+    // Generate dog inputs
     function updateDogFields() {
         dogInfoContainer.innerHTML = "";
         const numDogs = parseInt(numDogsInput.value);
         if (numDogs > 0 && numDogs <= 15) {
             for (let i = 1; i <= numDogs; i++) {
-                const nameLabel = document.createElement("label");
+                let nameLabel = document.createElement("label");
                 nameLabel.textContent = `Dog ${i} Name:`;
-                const nameInput = document.createElement("input");
+                let nameInput = document.createElement("input");
                 nameInput.type = "text";
                 nameInput.name = `dog-name-${i}`;
                 nameInput.required = true;
 
-                const breedLabel = document.createElement("label");
+                let breedLabel = document.createElement("label");
                 breedLabel.textContent = `Dog ${i} Breed:`;
-                const breedInput = document.createElement("input");
+                let breedInput = document.createElement("input");
                 breedInput.type = "text";
                 breedInput.name = `dog-breed-${i}`;
                 breedInput.required = true;
 
-                const sizeLabel = document.createElement("label");
+                let sizeLabel = document.createElement("label");
                 sizeLabel.textContent = `Dog ${i} Size:`;
-                const sizeSelect = document.createElement("select");
+                let sizeSelect = document.createElement("select");
                 sizeSelect.name = `dog-size-${i}`;
                 sizeSelect.required = true;
                 ["small", "medium", "large"].forEach(size => {
-                    const option = document.createElement("option");
+                    let option = document.createElement("option");
                     option.value = size;
                     option.textContent = size.charAt(0).toUpperCase() + size.slice(1);
                     sizeSelect.appendChild(option);
@@ -95,12 +111,15 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     numDogsInput.addEventListener("input", updateDogFields);
 
+    // Handle form submission
     appointmentForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
         const name = document.getElementById("customer-name").value;
         const phone = document.getElementById("phone-number").value;
-        const date = appointmentDateInput.value;
+        const dateRaw = appointmentDateInput.value;
+        const dateObj = new Date(dateRaw);
+        const date = dateObj.toISOString().split("T")[0];
         const numDogs = parseInt(numDogsInput.value);
 
         if (!name || !phone || !date || isNaN(numDogs) || numDogs <= 0) {
@@ -108,8 +127,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             return;
         }
 
-        const newDogs = { small: 0, medium: 0, large: 0 };
-        const dogDataList = [];
+        let newDogs = { small: 0, medium: 0, large: 0 };
+        let dogDataList = [];
 
         for (let i = 1; i <= numDogs; i++) {
             const dog_name = document.getElementsByName(`dog-name-${i}`)[0].value;
@@ -140,9 +159,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (newMedium === 4 && newSmall > 8) return alert("With 4 medium dogs, only 8 small allowed.");
         if (newMedium <= 3 && newSmall > 9) return alert("Only 9 small dogs allowed if 3 or fewer medium dogs.");
 
+        // Submit dogs in parallel
         try {
-            const promises = dogDataList.map(dog => {
-                const payload = {
+            await Promise.all(dogDataList.map(dog => {
+                const data = {
                     data: {
                         name, phone, date,
                         dog_name: dog.dog_name,
@@ -153,19 +173,18 @@ document.addEventListener("DOMContentLoaded", async function () {
                 return fetch(SHEETDB_API, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(data)
                 });
-            });
+            }));
 
-            await Promise.all(promises);
             appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
-            await loadBookings();
+            await loadBookings(); // Refresh bookings
         } catch (err) {
             console.error("Submission error:", err);
             alert("There was a problem submitting your appointment.");
         }
     });
 
-    await loadBookings();
-    initFlatpickr();
+    await loadBookings(); // Load data
+    initFlatpickr();      // Setup calendar
 }); 
