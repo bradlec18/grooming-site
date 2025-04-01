@@ -1,38 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schedule Appointment</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schedule Appointment</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <header>
-        <h1>Schedule an Appointment</h1>
-    </header>
-    
-    <main>
-        <p class="warning"><strong>⚠️ Appointments are only available Tuesday through Friday. Please do not schedule on weekends or Mondays.</strong></p>
-        
-        <form id="appointment-form">
-            <label for="num-dogs">Number of Dogs:</label>
-            <input type="number" id="num-dogs" min="1" max="15" required>
+  <header>
+    <h1>Schedule an Appointment</h1>
+  </header>
 
-            <div id="dog-info-container"></div> <!-- Dynamic fields will be inserted here -->
+  <main>
+    <p class="warning">
+      ⚠️ Appointments are only available Tuesday through Friday. Please do not schedule on weekends or Mondays.
+    </p>
 
-            <label for="customer-name">Your Name:</label>
-            <input type="text" id="customer-name" required>
+    <form id="appointment-form">
+      <label for="num-dogs">Number of Dogs:</label>
+      <input type="number" id="num-dogs" min="1" max="15" required />
 
-            <label for="phone-number">Phone Number:</label>
-            <input type="tel" id="phone-number" required>
+      <div id="dog-info-container"></div> <!-- Dog fields will go here -->
 
-            <label for="appointment-date">Select Date:</label>
-            <input type="date" id="appointment-date" required>
+      <label for="customer-name">Your Name:</label>
+      <input type="text" id="customer-name" required />
 
-            <button type="submit">Book Appointment</button>
-        </form>
-    </main>
+      <label for="phone-number">Phone Number:</label>
+      <input type="tel" id="phone-number" required />
 
-    <script src="appointment.js"></script>
+      <label for="appointment-date">Select Date:</label>
+      <input type="date" id="appointment-date" required />
+
+      <button type="submit">Book Appointment</button>
+    </form>
+  </main>
+
+  <script src="appointment.js"></script>
 </body>
 </html> 
