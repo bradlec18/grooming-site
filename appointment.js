@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", async function () {
     const appointmentForm = document.getElementById("appointment-form");
-    const appointmentDate = document.getElementById("appointment-date");
+    const appointmentDateInput = document.getElementById("appointment-date");
     const numDogsInput = document.getElementById("num-dogs");
     const dogInfoContainer = document.getElementById("dog-info-container");
 
     const SHEETDB_API = "https://sheetdb.io/api/v1/8umqwpfdx1nak";
     let bookingsByDate = {};
 
-    // Load existing bookings and group by date
+    // Load bookings from SheetDB
     async function loadBookings() {
         try {
             const res = await fetch(SHEETDB_API);
@@ -23,39 +23,49 @@ document.addEventListener("DOMContentLoaded", async function () {
                     bookingsByDate[date] = { small: 0, medium: 0, large: 0 };
                 }
 
-                if (size === "small" || size === "medium" || size === "large") {
+                if (["small", "medium", "large"].includes(size)) {
                     bookingsByDate[date][size]++;
                 }
             });
-
-            disableFullyBookedDates();
         } catch (err) {
             console.error("Error loading bookings:", err);
         }
     }
 
-    // Disable dates in calendar if fully booked
-    function disableFullyBookedDates() {
-        const today = new Date().toISOString().split("T")[0];
-        appointmentDate.setAttribute("min", today);
+    // Check if a date is fully booked
+    function isDateFullyBooked(dateStr) {
+        const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
+        const total = bookings.small + bookings.medium + bookings.large;
 
-        appointmentDate.addEventListener("input", () => {
-            const selectedDate = appointmentDate.value;
-            const bookings = bookingsByDate[selectedDate] || { small: 0, medium: 0, large: 0 };
+        return (
+            total >= 15 ||
+            bookings.large >= 3 ||
+            (bookings.medium >= 6 && bookings.small >= 6) ||
+            (bookings.medium === 5 && bookings.small >= 7) ||
+            (bookings.medium === 4 && bookings.small >= 8) ||
+            (bookings.medium <= 3 && bookings.small >= 9)
+        );
+    }
 
-            if (bookings.small + bookings.medium + bookings.large >= 15 ||
-                bookings.large >= 3 ||
-                bookings.medium >= 6 && bookings.small >= 6 ||
-                bookings.medium === 5 && bookings.small >= 7 ||
-                bookings.medium === 4 && bookings.small >= 8 ||
-                bookings.medium <= 3 && bookings.small >= 9) {
-                alert("That date is fully booked. Please choose another.");
-                appointmentDate.value = "";
-            }
+    // Initialize Flatpickr with logic
+    function initFlatpickr() {
+        flatpickr(appointmentDateInput, {
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            disable: [
+                function (date) {
+                    const day = date.getDay();
+                    return day === 0 || day === 1 || day === 6; // Disable Sunday (0), Monday (1), Saturday (6)
+                },
+                function (date) {
+                    const dateStr = date.toISOString().split("T")[0];
+                    return isDateFullyBooked(dateStr);
+                }
+            ]
         });
     }
 
-    // Dynamically create dog fields
+    // Create dog input fields
     function updateDogFields() {
         dogInfoContainer.innerHTML = "";
         const numDogs = parseInt(numDogsInput.value);
@@ -97,16 +107,16 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // When number of dogs changes
+    // On number of dogs input
     numDogsInput.addEventListener("input", updateDogFields);
 
-    // On form submit
+    // On form submission
     appointmentForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
         const name = document.getElementById("customer-name").value;
         const phone = document.getElementById("phone-number").value;
-        const date = appointmentDate.value;
+        const date = appointmentDateInput.value;
         const numDogs = parseInt(numDogsInput.value);
 
         if (!name || !phone || !date || isNaN(numDogs) || numDogs <= 0) {
@@ -114,7 +124,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             return;
         }
 
-        // Count new dogs
         let newDogs = { small: 0, medium: 0, large: 0 };
         let dogDataList = [];
 
@@ -132,9 +141,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             dogDataList.push({ dog_name, dog_breed, dog_size });
         }
 
-        // Check booking logic
+        // Check rules
         const current = bookingsByDate[date] || { small: 0, medium: 0, large: 0 };
-
         const total = current.small + current.medium + current.large + numDogs;
         const newSmall = current.small + newDogs.small;
         const newMedium = current.medium + newDogs.medium;
@@ -144,8 +152,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (newLarge > 3) return alert("Only 3 large dogs allowed per day.");
         if (newSmall > 9) return alert("Only 9 small dogs allowed.");
         if (newMedium > 6) return alert("Only 6 medium dogs allowed.");
-
-        // Small + medium combo logic
         if (newMedium >= 6 && newSmall > 6) return alert("With 6 medium dogs, only 6 small allowed.");
         if (newMedium === 5 && newSmall > 7) return alert("With 5 medium dogs, only 7 small allowed.");
         if (newMedium === 4 && newSmall > 8) return alert("With 4 medium dogs, only 8 small allowed.");
@@ -171,12 +177,13 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
 
             appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
-            await loadBookings(); // Refresh after successful submission
-        } catch (error) {
-            console.error("Submission error:", error);
+            await loadBookings(); // Refresh bookings
+        } catch (err) {
+            console.error("Submission error:", err);
             alert("There was a problem submitting your appointment.");
         }
     });
 
-    await loadBookings(); // Initial load
-}); 
+    await loadBookings(); // Load bookings and init calendar
+    initFlatpickr(); // Setup calendar
+});
