@@ -7,22 +7,18 @@ document.addEventListener("DOMContentLoaded", async function () {
     const SHEETDB_API = "https://sheetdb.io/api/v1/8umqwpfdx1nak";
     let bookingsByDate = {};
 
-    // Load bookings from SheetDB
     async function loadBookings() {
         try {
             const res = await fetch(SHEETDB_API);
             const data = await res.json();
 
             bookingsByDate = {};
-
             data.forEach(entry => {
                 const date = entry.date;
                 const size = entry.dog_size;
-
                 if (!bookingsByDate[date]) {
                     bookingsByDate[date] = { small: 0, medium: 0, large: 0 };
                 }
-
                 if (["small", "medium", "large"].includes(size)) {
                     bookingsByDate[date][size]++;
                 }
@@ -32,11 +28,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Check if a date is fully booked
     function isDateFullyBooked(dateStr) {
         const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
         const total = bookings.small + bookings.medium + bookings.large;
-
         return (
             total >= 15 ||
             bookings.large >= 3 ||
@@ -47,51 +41,43 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
     }
 
-    // Initialize Flatpickr with logic
     function initFlatpickr() {
         flatpickr(appointmentDateInput, {
             dateFormat: "Y-m-d",
             minDate: "today",
             disable: [
-                function (date) {
-                    const day = date.getDay();
-                    return day === 0 || day === 1 || day === 6; // Disable Sunday (0), Monday (1), Saturday (6)
-                },
-                function (date) {
-                    const dateStr = date.toISOString().split("T")[0];
-                    return isDateFullyBooked(dateStr);
-                }
+                date => [0, 1, 6].includes(date.getDay()), // Sun, Mon, Sat
+                date => isDateFullyBooked(date.toISOString().split("T")[0])
             ]
         });
     }
 
-    // Create dog input fields
     function updateDogFields() {
         dogInfoContainer.innerHTML = "";
         const numDogs = parseInt(numDogsInput.value);
         if (numDogs > 0 && numDogs <= 15) {
             for (let i = 1; i <= numDogs; i++) {
-                let nameLabel = document.createElement("label");
+                const nameLabel = document.createElement("label");
                 nameLabel.textContent = `Dog ${i} Name:`;
-                let nameInput = document.createElement("input");
+                const nameInput = document.createElement("input");
                 nameInput.type = "text";
                 nameInput.name = `dog-name-${i}`;
                 nameInput.required = true;
 
-                let breedLabel = document.createElement("label");
+                const breedLabel = document.createElement("label");
                 breedLabel.textContent = `Dog ${i} Breed:`;
-                let breedInput = document.createElement("input");
+                const breedInput = document.createElement("input");
                 breedInput.type = "text";
                 breedInput.name = `dog-breed-${i}`;
                 breedInput.required = true;
 
-                let sizeLabel = document.createElement("label");
+                const sizeLabel = document.createElement("label");
                 sizeLabel.textContent = `Dog ${i} Size:`;
-                let sizeSelect = document.createElement("select");
+                const sizeSelect = document.createElement("select");
                 sizeSelect.name = `dog-size-${i}`;
                 sizeSelect.required = true;
                 ["small", "medium", "large"].forEach(size => {
-                    let option = document.createElement("option");
+                    const option = document.createElement("option");
                     option.value = size;
                     option.textContent = size.charAt(0).toUpperCase() + size.slice(1);
                     sizeSelect.appendChild(option);
@@ -107,18 +93,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // On number of dogs input
     numDogsInput.addEventListener("input", updateDogFields);
 
-    // On form submission
     appointmentForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
         const name = document.getElementById("customer-name").value;
         const phone = document.getElementById("phone-number").value;
-        const dateRaw = appointmentDateInput.value;
-        const dateObj = new Date(dateRaw);
-        const date = dateObj.toISOString().split("T")[0];
+        const date = appointmentDateInput.value;
         const numDogs = parseInt(numDogsInput.value);
 
         if (!name || !phone || !date || isNaN(numDogs) || numDogs <= 0) {
@@ -126,8 +108,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             return;
         }
 
-        let newDogs = { small: 0, medium: 0, large: 0 };
-        let dogDataList = [];
+        const newDogs = { small: 0, medium: 0, large: 0 };
+        const dogDataList = [];
 
         for (let i = 1; i <= numDogs; i++) {
             const dog_name = document.getElementsByName(`dog-name-${i}`)[0].value;
@@ -143,7 +125,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             dogDataList.push({ dog_name, dog_breed, dog_size });
         }
 
-        // Check rules
         const current = bookingsByDate[date] || { small: 0, medium: 0, large: 0 };
         const total = current.small + current.medium + current.large + numDogs;
         const newSmall = current.small + newDogs.small;
@@ -159,10 +140,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (newMedium === 4 && newSmall > 8) return alert("With 4 medium dogs, only 8 small allowed.");
         if (newMedium <= 3 && newSmall > 9) return alert("Only 9 small dogs allowed if 3 or fewer medium dogs.");
 
-        // Submit each dog as a separate row
         try {
-            for (const dog of dogDataList) {
-                const data = {
+            const promises = dogDataList.map(dog => {
+                const payload = {
                     data: {
                         name, phone, date,
                         dog_name: dog.dog_name,
@@ -170,22 +150,22 @@ document.addEventListener("DOMContentLoaded", async function () {
                         dog_size: dog.dog_size
                     }
                 };
-
-                await fetch(SHEETDB_API, {
+                return fetch(SHEETDB_API, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(payload)
                 });
-            }
+            });
 
+            await Promise.all(promises);
             appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
-            await loadBookings(); // Refresh bookings
+            await loadBookings();
         } catch (err) {
             console.error("Submission error:", err);
             alert("There was a problem submitting your appointment.");
         }
     });
 
-    await loadBookings(); // Load bookings and init calendar
-    initFlatpickr(); // Setup calendar
-});
+    await loadBookings();
+    initFlatpickr();
+}); 
