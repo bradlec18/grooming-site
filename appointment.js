@@ -4,10 +4,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     const numDogsInput = document.getElementById("num-dogs");
     const dogInfoContainer = document.getElementById("dog-info-container");
 
+    // ✅ Create space for availability message
+    const availabilityNotice = document.createElement("div");
+    availabilityNotice.id = "availability-notice";
+    availabilityNotice.style.fontWeight = "bold";
+    availabilityNotice.style.marginBottom = "15px";
+    appointmentDateInput.insertAdjacentElement("afterend", availabilityNotice);
+
     const SHEETDB_API = "https://sheetdb.io/api/v1/8umqwpfdx1nak";
     let bookingsByDate = {};
 
-    // Load bookings from SheetDB
     async function loadBookings() {
         try {
             const res = await fetch(SHEETDB_API);
@@ -32,7 +38,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Check if a date is fully booked
     function isDateFullyBooked(dateStr) {
         const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
         const total = bookings.small + bookings.medium + bookings.large;
@@ -55,7 +60,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
     }
 
-    // Initialize Flatpickr
     function initFlatpickr() {
         flatpickr(appointmentDateInput, {
             dateFormat: "Y-m-d",
@@ -63,17 +67,33 @@ document.addEventListener("DOMContentLoaded", async function () {
             disable: [
                 function (date) {
                     const day = date.getDay();
-                    return day === 0 || day === 1 || day === 6; // Sun, Mon, Sat
+                    return day === 0 || day === 1 || day === 6;
                 },
                 function (date) {
                     const dateStr = date.toISOString().split("T")[0];
                     return isDateFullyBooked(dateStr);
                 }
-            ]
+            ],
+            onChange: function (selectedDates, dateStr) {
+                if (!dateStr) {
+                    availabilityNotice.textContent = "";
+                    return;
+                }
+
+                const current = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
+
+                const remaining = {
+                    small: Math.max(0, 9 - current.small),
+                    medium: Math.max(0, 6 - current.medium),
+                    large: Math.max(0, 3 - current.large)
+                };
+
+                availabilityNotice.textContent = `🐾 Availability for ${dateStr}:
+Small: ${remaining.small}/9 left | Medium: ${remaining.medium}/6 left | Large: ${remaining.large}/3 left`;
+            }
         });
     }
 
-    // Generate dog fields
     function updateDogFields() {
         dogInfoContainer.innerHTML = "";
         const numDogs = parseInt(numDogsInput.value);
@@ -115,10 +135,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // On number of dogs input
     numDogsInput.addEventListener("input", updateDogFields);
 
-    // On form submission
     appointmentForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
@@ -151,7 +169,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             dogDataList.push({ dog_name, dog_breed, dog_size });
         }
 
-        // Check rules
         const current = bookingsByDate[date] || { small: 0, medium: 0, large: 0 };
         const total = current.small + current.medium + current.large + numDogs;
         const newSmall = current.small + newDogs.small;
