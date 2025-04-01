@@ -116,7 +116,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         const name = document.getElementById("customer-name").value;
         const phone = document.getElementById("phone-number").value;
-        const date = appointmentDateInput.value;
+        const dateRaw = appointmentDateInput.value;
+        const dateObj = new Date(dateRaw);
+        const date = dateObj.toISOString().split("T")[0];
         const numDogs = parseInt(numDogsInput.value);
 
         if (!name || !phone || !date || isNaN(numDogs) || numDogs <= 0) {
@@ -186,4 +188,4 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     await loadBookings(); // Load bookings and init calendar
     initFlatpickr(); // Setup calendar
-});  
+});
