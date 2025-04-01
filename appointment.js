@@ -1,9 +1,61 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     const appointmentForm = document.getElementById("appointment-form");
     const appointmentDate = document.getElementById("appointment-date");
     const numDogsInput = document.getElementById("num-dogs");
     const dogInfoContainer = document.getElementById("dog-info-container");
 
+    const SHEETDB_API = "https://sheetdb.io/api/v1/8umqwpfdx1nak";
+    let bookingsByDate = {};
+
+    // Load existing bookings and group by date
+    async function loadBookings() {
+        try {
+            const res = await fetch(SHEETDB_API);
+            const data = await res.json();
+
+            bookingsByDate = {};
+
+            data.forEach(entry => {
+                const date = entry.date;
+                const size = entry.dog_size;
+
+                if (!bookingsByDate[date]) {
+                    bookingsByDate[date] = { small: 0, medium: 0, large: 0 };
+                }
+
+                if (size === "small" || size === "medium" || size === "large") {
+                    bookingsByDate[date][size]++;
+                }
+            });
+
+            disableFullyBookedDates();
+        } catch (err) {
+            console.error("Error loading bookings:", err);
+        }
+    }
+
+    // Disable dates in calendar if fully booked
+    function disableFullyBookedDates() {
+        const today = new Date().toISOString().split("T")[0];
+        appointmentDate.setAttribute("min", today);
+
+        appointmentDate.addEventListener("input", () => {
+            const selectedDate = appointmentDate.value;
+            const bookings = bookingsByDate[selectedDate] || { small: 0, medium: 0, large: 0 };
+
+            if (bookings.small + bookings.medium + bookings.large >= 15 ||
+                bookings.large >= 3 ||
+                bookings.medium >= 6 && bookings.small >= 6 ||
+                bookings.medium === 5 && bookings.small >= 7 ||
+                bookings.medium === 4 && bookings.small >= 8 ||
+                bookings.medium <= 3 && bookings.small >= 9) {
+                alert("That date is fully booked. Please choose another.");
+                appointmentDate.value = "";
+            }
+        });
+    }
+
+    // Dynamically create dog fields
     function updateDogFields() {
         dogInfoContainer.innerHTML = "";
         const numDogs = parseInt(numDogsInput.value);
@@ -45,15 +97,26 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // When number of dogs changes
     numDogsInput.addEventListener("input", updateDogFields);
 
-    appointmentForm.addEventListener("submit", function (event) {
+    // On form submit
+    appointmentForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
         const name = document.getElementById("customer-name").value;
         const phone = document.getElementById("phone-number").value;
         const date = appointmentDate.value;
         const numDogs = parseInt(numDogsInput.value);
+
+        if (!name || !phone || !date || isNaN(numDogs) || numDogs <= 0) {
+            alert("Please fill out all fields.");
+            return;
+        }
+
+        // Count new dogs
+        let newDogs = { small: 0, medium: 0, large: 0 };
+        let dogDataList = [];
 
         for (let i = 1; i <= numDogs; i++) {
             const dog_name = document.getElementsByName(`dog-name-${i}`)[0].value;
@@ -65,34 +128,55 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            const data = {
-                data: {
-                    name: name,
-                    phone: phone,
-                    date: date,
-                    dog_name: dog_name,
-                    dog_breed: dog_breed,
-                    dog_size: dog_size
-                }
-            };
-
-            fetch("https://sheetdb.io/api/v1/8umqwpfdx1nak", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log("Success:", result);
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("There was a problem submitting your appointment. Please try again.");
-            });
+            newDogs[dog_size]++;
+            dogDataList.push({ dog_name, dog_breed, dog_size });
         }
 
-        appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
+        // Check booking logic
+        const current = bookingsByDate[date] || { small: 0, medium: 0, large: 0 };
+
+        const total = current.small + current.medium + current.large + numDogs;
+        const newSmall = current.small + newDogs.small;
+        const newMedium = current.medium + newDogs.medium;
+        const newLarge = current.large + newDogs.large;
+
+        if (total > 15) return alert("Daily limit of 15 dogs exceeded.");
+        if (newLarge > 3) return alert("Only 3 large dogs allowed per day.");
+        if (newSmall > 9) return alert("Only 9 small dogs allowed.");
+        if (newMedium > 6) return alert("Only 6 medium dogs allowed.");
+
+        // Small + medium combo logic
+        if (newMedium >= 6 && newSmall > 6) return alert("With 6 medium dogs, only 6 small allowed.");
+        if (newMedium === 5 && newSmall > 7) return alert("With 5 medium dogs, only 7 small allowed.");
+        if (newMedium === 4 && newSmall > 8) return alert("With 4 medium dogs, only 8 small allowed.");
+        if (newMedium <= 3 && newSmall > 9) return alert("Only 9 small dogs allowed if 3 or fewer medium dogs.");
+
+        // Submit each dog as a separate row
+        try {
+            for (const dog of dogDataList) {
+                const data = {
+                    data: {
+                        name, phone, date,
+                        dog_name: dog.dog_name,
+                        dog_breed: dog.dog_breed,
+                        dog_size: dog.dog_size
+                    }
+                };
+
+                await fetch(SHEETDB_API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+            }
+
+            appointmentForm.innerHTML = `<p>✅ Appointment booked successfully for ${date}. Thank you!</p>`;
+            await loadBookings(); // Refresh after successful submission
+        } catch (error) {
+            console.error("Submission error:", error);
+            alert("There was a problem submitting your appointment.");
+        }
     });
-});
+
+    await loadBookings(); // Initial load
+}); 
