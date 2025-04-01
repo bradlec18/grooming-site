@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     const SHEETDB_API = "https://sheetdb.io/api/v1/8umqwpfdx1nak";
     let bookingsByDate = {};
   
-    // Load bookings from SheetDB
     async function loadBookings() {
       try {
         const res = await fetch(SHEETDB_API);
@@ -32,7 +31,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     }
   
-    // Show availability after date selection
     function showAvailability(dateStr) {
       const containerId = "availability-info";
       let availabilityContainer = document.getElementById(containerId);
@@ -45,21 +43,26 @@ document.addEventListener("DOMContentLoaded", async function () {
   
       const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
   
-      // SMALL + MEDIUM shared logic
       const maxShared = 12;
       const maxSmall = 9;
       const maxMedium = 6;
   
-      const totalSmall = bookings.small;
-      const totalMedium = bookings.medium;
-      const totalShared = totalSmall + totalMedium;
+      const small = bookings.small;
+      const medium = bookings.medium;
+      const large = bookings.large;
   
-      let availableSmall = Math.min(maxSmall - totalSmall, maxShared - totalShared);
-      let availableMedium = Math.min(maxMedium - totalMedium, maxShared - totalShared);
-      const availableLarge = Math.max(0, 3 - bookings.large);
+      const sharedUsed = small + medium;
+      let availableSmall = Math.min(maxSmall - small, maxShared - sharedUsed);
+      let availableMedium = Math.min(maxMedium - medium, maxShared - sharedUsed);
+      const availableLarge = Math.max(0, 3 - large);
   
       if (availableSmall < 0) availableSmall = 0;
       if (availableMedium < 0) availableMedium = 0;
+  
+      let specialNote = "";
+      if (availableSmall + availableMedium === 1) {
+        specialNote = `<p class="warning">⚠️ Only 1 more small OR medium dog can be scheduled for this day.</p>`;
+      }
   
       availabilityContainer.innerHTML = `
         <p>🐾 Availability for ${dateStr}:</p>
@@ -68,10 +71,10 @@ document.addEventListener("DOMContentLoaded", async function () {
           <li>Medium dogs: ${availableMedium}/6 slots left</li>
           <li>Large dogs: ${availableLarge}/3 slots left</li>
         </ul>
+        ${specialNote}
       `;
     }
   
-    // Check if a date is fully booked
     function isDateFullyBooked(dateStr) {
       const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
       const total = bookings.small + bookings.medium + bookings.large;
@@ -94,28 +97,26 @@ document.addEventListener("DOMContentLoaded", async function () {
       );
     }
   
-    // Initialize Flatpickr
     function initFlatpickr() {
       flatpickr(appointmentDateInput, {
         dateFormat: "Y-m-d",
         minDate: "today",
         disable: [
-          function (date) {
+          date => {
             const day = date.getDay();
-            return day === 0 || day === 1 || day === 6; // Sun, Mon, Sat
+            return day === 0 || day === 1 || day === 6;
           },
-          function (date) {
+          date => {
             const dateStr = date.toISOString().split("T")[0];
             return isDateFullyBooked(dateStr);
           }
         ],
-        onChange: function (selectedDates, dateStr) {
+        onChange: (selectedDates, dateStr) => {
           showAvailability(dateStr);
         }
       });
     }
   
-    // Generate dog fields
     function updateDogFields() {
       dogInfoContainer.innerHTML = "";
       const numDogs = parseInt(numDogsInput.value);
@@ -157,10 +158,8 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     }
   
-    // On number of dogs input
     numDogsInput.addEventListener("input", updateDogFields);
   
-    // On form submission
     appointmentForm.addEventListener("submit", async function (event) {
       event.preventDefault();
   
