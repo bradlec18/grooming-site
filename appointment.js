@@ -13,15 +13,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         const data = await res.json();
   
         bookingsByDate = {};
-  
         data.forEach(entry => {
           const date = entry.date;
           const size = entry.dog_size;
-  
           if (!bookingsByDate[date]) {
             bookingsByDate[date] = { small: 0, medium: 0, large: 0 };
           }
-  
           if (["small", "medium", "large"].includes(size)) {
             bookingsByDate[date][size]++;
           }
@@ -34,7 +31,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     function showAvailability(dateStr) {
       const containerId = "availability-info";
       let availabilityContainer = document.getElementById(containerId);
-  
       if (!availabilityContainer) {
         availabilityContainer = document.createElement("div");
         availabilityContainer.id = containerId;
@@ -42,16 +38,13 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
   
       const bookings = bookingsByDate[dateStr] || { small: 0, medium: 0, large: 0 };
-  
-      const maxShared = 12;
-      const maxSmall = 9;
-      const maxMedium = 6;
-  
       const small = bookings.small;
       const medium = bookings.medium;
       const large = bookings.large;
   
+      const maxShared = 12, maxSmall = 9, maxMedium = 6;
       const sharedUsed = small + medium;
+  
       let availableSmall = Math.min(maxSmall - small, maxShared - sharedUsed);
       let availableMedium = Math.min(maxMedium - medium, maxShared - sharedUsed);
       const availableLarge = Math.max(0, 3 - large);
@@ -60,8 +53,14 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (availableMedium < 0) availableMedium = 0;
   
       let specialNote = "";
+  
       if (availableSmall + availableMedium === 1) {
         specialNote = `<p class="warning">⚠️ Only 1 more small OR medium dog can be scheduled for this day.</p>`;
+      } else if (availableSmall === 2 && availableMedium === 1) {
+        specialNote = `<p class="warning">⚠️ You may book up to 2 small dogs or 1 small and 1 medium.</p>`;
+      } else if (small >= 9 && medium < 6) {
+        specialNote = `<p class="warning">⚠️ Only 1 more medium dog can be scheduled today.</p>`;
+        availableSmall = 0; // Lock out smalls logically
       }
   
       availabilityContainer.innerHTML = `
