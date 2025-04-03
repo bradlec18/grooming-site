@@ -60,30 +60,30 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (availableMedium < 0) availableMedium = 0;
   
       let specialNote = "";
-      if ((small === 8 && medium === 3) || (small === 7 && medium === 4) || (small === 6 && medium === 5)) {
-        specialNote = `<p class="warning">⚠️ Only 1 spot left for a small or medium dog.</p>`;
-        availabilityContainer.innerHTML = `
-          <p>🐾 Availability for ${dateStr}:</p>
-          <ul>
-            <li>Large dogs: ${availableLarge}/3 slots left</li>
-          </ul>
-          ${specialNote}
-        `;
-        return;
-      }
+      let smallMedHTML = `
+        <li>Small dogs: ${availableSmall}/9 slots left</li>
+        <li>Medium dogs: ${availableMedium}/6 slots left</li>
+      `;
   
-      if (small === 5 && medium === 5) {
+      if (
+        (small === 6 && medium === 5) ||
+        (small === 7 && medium === 4) ||
+        (small === 8 && medium === 3)
+      ) {
+        specialNote = `<p class="warning">⚠️ Only 1 spot left for a small or medium dog</p>`;
+        smallMedHTML = "";
+      } else if (small === 5 && medium === 5) {
         specialNote = `<p class="warning">⚠️ You can book 2 small dogs — or 1 small and 1 medium. If booking just 1 dog, either size is still available.</p>`;
+        smallMedHTML = "";
       }
   
       availabilityContainer.innerHTML = `
         <p>🐾 Availability for ${dateStr}:</p>
+        ${specialNote}
         <ul>
-          <li>Small dogs: ${availableSmall}/9 slots left</li>
-          <li>Medium dogs: ${availableMedium}/6 slots left</li>
+          ${smallMedHTML}
           <li>Large dogs: ${availableLarge}/3 slots left</li>
         </ul>
-        ${specialNote}
       `;
     }
   
@@ -248,5 +248,4 @@ document.addEventListener("DOMContentLoaded", async function () {
   
     await loadBookings();
     initFlatpickr();
-  });
-  
+  }); 
