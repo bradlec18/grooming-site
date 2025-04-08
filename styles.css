@@ -60,4 +60,19 @@ form button[type="submit"]:hover {
   border-radius: 6px;
   font-weight: bold;
   margin-bottom: 20px;
+}
+
+/* ✅ Logo Styling */
+header img.logo {
+  max-width: 150px;
+  height: auto;
+  display: block;
+  margin: 0 auto 15px;
+  object-fit: contain;
+}
+
+/* ✅ General Image Behavior */
+img {
+  max-width: 100%;
+  height: auto;
 } 
