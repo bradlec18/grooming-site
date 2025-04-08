@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
   <title>Schedule Appointment</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
@@ -13,7 +15,9 @@
   </header>
 
   <main>
-    <p class="warning"><strong>To ensure we have room for your pup, please select a date to check available spots by dog size before booking</strong></p>
+    <p class="warning">
+      <strong>To ensure we have room for your pup, please select a date to check available spots by dog size before booking.</strong>
+    </p>
 
     <form id="appointment-form">
       <label for="num-dogs">How many dogs are you booking for? (Max 4):</label>
@@ -22,13 +26,13 @@
       <div id="dog-info-container"></div>
 
       <label for="customer-name">Your Name:</label>
-      <input type="text" id="customer-name" required />
+      <input type="text" id="customer-name" required autocomplete="off" />
 
       <label for="phone-number">Phone Number:</label>
-      <input type="tel" id="phone-number" required />
+      <input type="tel" id="phone-number" required inputmode="tel" autocomplete="off" />
 
       <label for="appointment-date">Select Date:</label>
-      <input type="text" id="appointment-date" required />
+      <input type="text" id="appointment-date" required autocomplete="off" />
 
       <button type="submit">Book Appointment</button>
     </form>
@@ -37,4 +41,4 @@
   <script src="appointment.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </body>
-</html> 
+</html>
