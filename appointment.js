@@ -123,6 +123,15 @@ document.addEventListener("DOMContentLoaded", async function () {
           return isDateFullyBooked(dateStr);
         }
       ],
+      onReady: function () {
+        appointmentDateInput.setAttribute("autocomplete", "off");
+        appointmentDateInput.setAttribute("inputmode", "none");
+        appointmentDateInput.setAttribute("readonly", "readonly");
+        appointmentDateInput.blur();
+      },
+      onOpen: function () {
+        appointmentDateInput.blur();
+      },
       onChange: (selectedDates, dateStr) => {
         showAvailability(dateStr);
       }
@@ -187,7 +196,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       return;
     }
 
-    // ✅ Enforce max of 4 dogs per customer
     if (numDogs > 4) {
       alert("You may only book up to 4 dogs per appointment.");
       return;
