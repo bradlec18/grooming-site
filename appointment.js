@@ -127,7 +127,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         appointmentDateInput.setAttribute("autocomplete", "off");
         appointmentDateInput.setAttribute("inputmode", "none");
         appointmentDateInput.setAttribute("readonly", "readonly");
+        appointmentDateInput.setAttribute("aria-hidden", "true");
+        appointmentDateInput.style.caretColor = "transparent";
+        appointmentDateInput.style.userSelect = "none";
+        appointmentDateInput.style.webkitUserSelect = "none";
+        appointmentDateInput.style.pointerEvents = "none"; // Disable direct interaction
         appointmentDateInput.blur();
+
+        // Trigger calendar manually if user clicks on label or container
+        appointmentDateInput.parentElement.addEventListener("click", () => {
+          appointmentDateInput._flatpickr.open();
+        });
       },
       onOpen: function () {
         appointmentDateInput.blur();
@@ -141,7 +151,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   function updateDogFields() {
     dogInfoContainer.innerHTML = "";
     const numDogs = parseInt(numDogsInput.value);
-    if (numDogs > 0 && numDogs <= 15) {
+    if (numDogs > 0 && numDogs <= 4) {
       for (let i = 1; i <= numDogs; i++) {
         const nameLabel = document.createElement("label");
         nameLabel.textContent = `Dog ${i} Name:`;
