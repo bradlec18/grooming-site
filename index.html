@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- ✅ Prevent iOS from triggering Quick Note while keeping tel: clickable -->
   <meta name="format-detection" content="telephone=no" />
   <title>Pet Purrfections!</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header>
-    <img src="logo.png" alt="Pet Purrfections Logo" class="logo">
+    <!-- ✅ Optimized local logo load -->
+    <img src="logo.png" alt="Pet Purrfections Logo" class="logo" loading="eager">
     <h1>Pet Purrfections</h1>
     <p class="tagline">Full service dog grooming appointments</p>
   </header>
@@ -23,7 +25,7 @@
     <section class="contact-info">
       <h3>📍 Located in Osawatomie, KS</h3>
       <p class="phone-text">📞 For nail or bath appointments call or text us at:
-        <a href="tel:9139635192" class="phone-link">913-963-5192</a>
+        <a href="tel:9139635192" class="phone-link" rel="nofollow">913-963-5192</a>
       </p>
     </section>
 
@@ -36,4 +38,4 @@
     </section>
   </main>
 </body>
-</html>
+</html> 
