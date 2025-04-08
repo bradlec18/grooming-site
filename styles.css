@@ -7,32 +7,35 @@ body {
   color: #333;
 }
 
-/* Header Styling */
+/* Header */
 header {
   background-color: #c8a2c8; /* Lavender */
   color: white;
-  padding: 30px 20px;
+  padding: 40px 20px 20px 20px;
   text-align: center;
+  position: relative;
 }
 
 header img.logo {
-  width: 120px;
-  max-width: 90%;
-  height: auto;
+  height: 80px; /* ✅ Fixed size for consistent display */
+  width: auto;
+  max-width: 100%;
   display: block;
   margin: 0 auto 15px;
   object-fit: contain;
 }
 
+/* Header Title */
 header h1 {
   font-size: 2.5rem;
   margin: 10px 0;
   font-weight: bold;
 }
 
+/* Tagline */
 header .tagline {
   font-size: 1.1rem;
-  font-weight: 500;
+  margin-top: 5px;
 }
 
 /* Main Content */
@@ -48,15 +51,10 @@ main p {
   margin: 10px 0;
 }
 
-.call-info, .phone-text {
+.call-info {
   font-size: 1.2rem;
   font-weight: bold;
   color: #5c3a72;
-}
-
-.phone-link {
-  color: #5c3a72;
-  text-decoration: underline;
 }
 
 /* Button Styling */
@@ -77,9 +75,27 @@ main p {
 }
 
 /* Section Titles */
-h2, h3 {
+section h2 {
+  font-size: 1.8rem;
   color: #6e468d;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+/* Image Gallery */
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.gallery img {
+  width: 220px;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
 }
 
 /* Footer */
@@ -91,4 +107,69 @@ footer {
   font-size: 0.95rem;
   margin-top: 40px;
   border-top: 1px solid #d8c1e6;
+}
+
+/* Appointment Form Layout */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 25px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+form label {
+  margin-top: 15px;
+  font-weight: bold;
+  text-align: left;
+  font-size: 1rem;
+  color: #5c3a72;
+}
+
+form input,
+form select {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+
+/* Dog Info Container */
+#dog-info-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Submit Button */
+form button[type="submit"] {
+  background-color: #9c6fc5;
+  color: white;
+  font-size: 1.1rem;
+  padding: 12px;
+  margin-top: 25px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form button[type="submit"]:hover {
+  background-color: #814fb3;
+}
+
+/* Warning Style */
+.warning {
+  color: #a94442;
+  background-color: #fce8ec;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  margin-bottom: 20px;
 } 
