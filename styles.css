@@ -1,6 +1,20 @@
-/* iOS Writing Tools Fix */
-input, select, button, textarea {
+/* ✅ Prevent iOS Quick Note / Writing Tools */
+input,
+select,
+textarea,
+button {
   -webkit-user-modify: read-write-plaintext-only;
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
+  caret-color: auto;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="tel"] {
+  touch-action: manipulation;
+  font-family: inherit;
 }
 
 /* General Page Styling */
