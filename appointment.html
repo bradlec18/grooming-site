@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Schedule Appointment</title>
   <link rel="stylesheet" href="styles.css" />
-  <!-- ✅ Flatpickr CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 </head>
 <body>
@@ -14,15 +13,13 @@
   </header>
 
   <main>
-    <p class="warning">
-      <strong>Use the availability tracker when selecting a booking date</strong>
-    </p>
+    <p class="warning"><strong>Use the availability tracker when selecting a booking date</strong></p>
 
     <form id="appointment-form">
-      <label for="num-dogs">Number of Dogs:</label>
-      <input type="number" id="num-dogs" min="1" max="15" required />
+      <label for="num-dogs">How many dogs are you booking for? (Max 4):</label>
+      <input type="number" id="num-dogs" min="1" max="4" required />
 
-      <div id="dog-info-container"></div> <!-- Dog inputs go here -->
+      <div id="dog-info-container"></div>
 
       <label for="customer-name">Your Name:</label>
       <input type="text" id="customer-name" required />
@@ -37,10 +34,7 @@
     </form>
   </main>
 
-  <!-- ✅ Your Appointment Logic -->
   <script src="appointment.js"></script>
-
-  <!-- ✅ Flatpickr JS -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </body>
-</html>
+</html> 
